@@ -11,12 +11,12 @@ var parser = new PaVEParser();
 var face = new FaceStream();
 var RGBA = new RGBAStream();
 var socket = net.connect({ host: '192.168.1.1', port: 5555});
-socket.pipe(parser).pipe(RGBA)
+socket.pipe(parser).pipe(RGBA);
 
 client.takeoff();
+
 client.after(5000, function(){
     RGBA.on('data', function(data){
-        console.log("RGBA "+data.length);
         var count = 0;
         var side = 0;
         for(var i = 0; i < data.length; i=i+4){
@@ -26,20 +26,30 @@ client.after(5000, function(){
             }
         };
         side = side/count;
-        console.log("Verdi side: "+side);
         if(side < 0.3){
+            console.log("counterClockwise");
             client.counterClockwise(0.5);
         }else if (side > 0.7){
+            console.log("clockwise");
             client.clockwise(0.5);
         }else{
             client.stop();
+            console.log("stop " + count);
+            if(count > 180){
+                client.back(0.5);
+                console.log("back")
+            } else if(count < 120) {
+                client.front(0.5);
+                console.log("front")
+            }
         }
     })
 }).after(15000, function(){
     client.stop();
     client.land();
+    //RGBA.off('data');
 });
 
 var range = function(rgba, match){
-    return (Math.abs(rgba - match) < 10);
+    return (Math.abs(rgba - match) < 25);
 }
